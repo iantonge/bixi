@@ -1,0 +1,11 @@
+{
+  "name": "bixi",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "@luncheon/esbuild-plugin-gzip": "^0.1.0",
+    "esbuild": "^0.25.5"
+  }
+}
