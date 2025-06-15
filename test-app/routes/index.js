@@ -1,4 +1,5 @@
 const Router = require('@koa/router');
+const ajaxRoutes = require('./ajax');
 const linksRoutes = require('./links');
 
 const router = new Router();
@@ -25,6 +26,7 @@ router.get('/', async (ctx) => {
     `;
 });
 
+router.use(ajaxRoutes.routes(), ajaxRoutes.allowedMethods());
 router.use(linksRoutes.routes(), linksRoutes.allowedMethods());
 
 module.exports = router;
