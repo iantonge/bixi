@@ -18,6 +18,7 @@ const handleClick = async (e) => {
   if (!link) return
   e.preventDefault()
   if (new URL(link.href).origin !== window.location.origin) throw new Error('Bixi error: Cannot progressively enhance external links')
+  if (link.hasAttribute('target')) throw new Error('Bixi error: Cannot progressively enhance links with target attribute')
   const target = getTarget(link.getAttribute('bx-target'), link)
   await fetchAndSwapContent(link.href, 'GET', target)
 }
