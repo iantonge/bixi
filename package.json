@@ -3,11 +3,14 @@
   "version": "0.0.0",
   "scripts": {
     "build": "node build.js",
-    "test-app": "node ./test-app/server.js"
+    "test-app": "node ./test-app/server.js",
+    "test": "playwright test",
+    "postinstall": "playwright install --with-deps"
   },
   "devDependencies": {
     "@koa/router": "^13.1.0",
     "@luncheon/esbuild-plugin-gzip": "^0.1.0",
+    "@playwright/test": "^1.53.0",
     "esbuild": "^0.25.5",
     "koa": "^3.0.0",
     "koa-body": "^6.0.1",

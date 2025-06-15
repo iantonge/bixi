@@ -1,7 +1,7 @@
 const Router = require('@koa/router');
-const linksRoutes = require('./links');
+const interceptionRoutes = require('./interception');
 
-const router = new Router();
+const router = new Router({ prefix: '/links' });
 
 router.get('/', async (ctx) => {
   ctx.type = 'html';
@@ -13,8 +13,8 @@ router.get('/', async (ctx) => {
       </head>
       <body>
         <div bx-pane="main">
-          <h1>Welcome to bixi test app</h1>
-          <a href="/links" bx-target="main">link tests</a>
+          <h1>Link tests</h1>
+          <a href="/links/interception" bx-target="main">Link interception tests</a>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
@@ -25,6 +25,6 @@ router.get('/', async (ctx) => {
     `;
 });
 
-router.use(linksRoutes.routes(), linksRoutes.allowedMethods());
+router.use(interceptionRoutes.routes(), interceptionRoutes.allowedMethods());
 
 module.exports = router;
