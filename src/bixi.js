@@ -10,6 +10,29 @@ const withTryAsync = async (func) => {
   }
 }
 
+const tryInterceptSubmit = (e) => withTryAsync(() => interceptSubmit(e))
+
+const interceptSubmit = async (e) => {
+  const targetName = e.submitter?.getAttribute('bx-target') || e.target.getAttribute('bx-target')
+  if (!targetName) return
+  e.preventDefault()
+  const target = getTarget(targetName)
+  const method = (e.submitter?.getAttribute('formmethod') || e.target.getAttribute('method') || 'GET').toUpperCase()
+  const action = e.submitter?.getAttribute('formaction') || e.target.getAttribute('action') || window.location.href
+  const formData = new FormData(e.target, e.submitter)
+  const { url, body } = (method === 'GET')
+    ? buildGetRequest(action, formData)
+    : { url: action, body: formData }
+  await fetchAndSwapContent(url, method, target, body)
+}
+
+const buildGetRequest = (action, formData) => {
+  const url = new URL(action, window.location.origin)
+  const params = new URLSearchParams(formData)
+  if (params.size) url.search = '?' + params.toString()
+  return { url: url.href }
+}
+
 const tryHandleClick = (e) => withTryAsync(() => handleClick(e))
 
 const handleClick = async (e) => {
@@ -19,7 +42,7 @@ const handleClick = async (e) => {
   e.preventDefault()
   if (new URL(link.href).origin !== window.location.origin) throw new Error('Bixi error: Cannot progressively enhance external links')
   if (link.hasAttribute('target')) throw new Error('Bixi error: Cannot progressively enhance links with target attribute')
-  const target = getTarget(link.getAttribute('bx-target'), link)
+  const target = getTarget(link.getAttribute('bx-target'))
   await fetchAndSwapContent(link.href, 'GET', target)
 }
 
@@ -29,13 +52,13 @@ const getTarget = (targetName) => {
   return { el, name: targetName }
 }
 
-export const fetchAndSwapContent = async (url, method, target) => {
-  const content = await getContent(url, method, target)
+export const fetchAndSwapContent = async (url, method, target, body) => {
+  const content = await getContent(url, method, target, body)
   await loadContent(target, content)
 }
 
-const getContent = async (url, method, target) => {
-  const response = await fetch(url, { method })
+const getContent = async (url, method, target, body) => {
+  const response = await fetch(url, { method, body })
   const responseHTML = await response.text()
   const parsedDocument = parser.parseFromString(responseHTML, 'text/html')
   const pane = parsedDocument.querySelector(`[bx-pane="${target.name}"]`)
@@ -61,8 +84,10 @@ const swapContent = (target, newContent) => {
 export function init(config) {
   onError = config?.onError ?? onError
   document.addEventListener('click', tryHandleClick)
+  document.addEventListener('submit', tryInterceptSubmit)
 }
 
 export function destroy() {
   document.removeEventListener('click', tryHandleClick)
+  document.removeEventListener('submit', tryInterceptSubmit)
 }
