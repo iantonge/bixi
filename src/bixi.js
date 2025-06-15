@@ -1,5 +1,17 @@
 const parser = new DOMParser()
-  
+
+let onError = (error) => { throw error }
+
+const withTryAsync = async (func) => {
+  try {
+    await func()
+  } catch (error) {
+    onError(error)
+  }
+}
+
+const tryHandleClick = (e) => withTryAsync(() => handleClick(e))
+
 const handleClick = async (e) => {
   if (e.button === 1 || e.ctrlKey || e.metaKey || e.shiftKey) return // Modifiers to open a link in a new tab
   const link = e.target.closest('a[bx-target]')
@@ -46,9 +58,10 @@ const swapContent = (target, newContent) => {
 }
 
 export function init(config) {
-  document.addEventListener('click', handleClick)
+  onError = config?.onError ?? onError
+  document.addEventListener('click', tryHandleClick)
 }
 
 export function destroy() {
-  document.removeEventListener('click', handleClick)
+  document.removeEventListener('click', tryHandleClick)
 }
