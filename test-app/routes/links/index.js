@@ -12,13 +12,14 @@ router.get('/', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Link tests</h1>
           <a href="/links/interception" bx-target="main">Link interception tests</a>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
-          init();
+          window.bixiErrors = [];
+          init({ onError: (err) => window.bixiErrors.push(err.message) });
         </script>
       </body>
     </html>

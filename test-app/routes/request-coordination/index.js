@@ -11,7 +11,7 @@ router.get('/', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Request coordination tests</h1>
           <p>Original page content</p>
           <div bx-pane="sibling-pane-one">

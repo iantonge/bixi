@@ -10,7 +10,7 @@ test.describe('bixi form interception', () => {
       page.waitForSelector('p:has-text("GET form submitted")'),
       page.click('#get-form button:has-text("Plain submit")')
     ]);
-    const content = await page.textContent('[bx-pane=main]');
+    const content = await page.textContent('[bx-nav-pane=main]');
     expect(content).toContain('GET form submitted');
   });
 
@@ -19,7 +19,7 @@ test.describe('bixi form interception', () => {
       page.waitForSelector('p:has-text("Another GET form submitted")'),
       page.click('#get-form button:has-text("Formaction submit")')
     ]);
-    const content = await page.textContent('[bx-pane=main]');
+    const content = await page.textContent('[bx-nav-pane=main]');
     expect(content).toContain('Another GET form submitted');
   });
 
@@ -28,7 +28,7 @@ test.describe('bixi form interception', () => {
       page.waitForSelector('p:has-text("POST form submitted")'),
       page.click('#get-form button:has-text("Formmethod submit")')
     ]);
-    const content = await page.textContent('[bx-pane=main]');
+    const content = await page.textContent('[bx-nav-pane=main]');
     expect(content).toContain('POST form submitted');
   });
 
@@ -37,7 +37,7 @@ test.describe('bixi form interception', () => {
       page.waitForSelector('p:has-text("some value")'),
       page.click('#get-form button:has-text("Additional value submit")')
     ]);
-    const content = await page.textContent('[bx-pane=main]');
+    const content = await page.textContent('[bx-nav-pane=main]');
     expect(content).toContain('some value');
   });
 
@@ -46,7 +46,7 @@ test.describe('bixi form interception', () => {
       page.waitForSelector('p:has-text("POST form submitted")'),
       page.click('#post-form button')
     ]);
-    const content = await page.textContent('[bx-pane=main]');
+    const content = await page.textContent('[bx-nav-pane=main]');
     expect(content).toContain('POST form submitted');
   });
 });

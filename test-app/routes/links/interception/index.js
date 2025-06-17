@@ -11,7 +11,7 @@ router.get('/', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Link interception tests</h1>
           <p>Original page content</p>
           <ul>
@@ -41,13 +41,14 @@ router.get('/internal-link', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Link interception tests</h1>
           <p>This is an internal page</p>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
-          init();
+          window.bixiErrors = [];
+          init({ onError: (err) => window.bixiErrors.push(err.message) });
         </script>
       </body>
     </html>

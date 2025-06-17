@@ -1,8 +1,9 @@
 const Router = require('@koa/router');
 const ajaxRoutes = require('./ajax');
 const formsRoutes = require('./forms');
-const requestCoordinationRoutes = require('./request-coordination');
 const linksRoutes = require('./links');
+const navigationRoutes = require('./navigation');
+const requestCoordinationRoutes = require('./request-coordination');
 
 const router = new Router();
 
@@ -15,18 +16,20 @@ router.get('/', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Welcome to bixi test app</h1>
           <ul>
             <li><a href="/ajax" bx-target="main">ajax tests</a></li>
             <li><a href="/forms" bx-target="main">form tests</a></li>
-            <li><a href="/request-coordination" bx-target="main">request coordination tests</a></li>
             <li><a href="/links" bx-target="main">link tests</a></li>
+            <li><a href="/navigation" bx-target="main">navigation tests</a></li>
+            <li><a href="/request-coordination" bx-target="main">request coordination tests</a></li>
           </ul>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
-          init();
+          window.bixiErrors = [];
+          init({ onError: (err) => window.bixiErrors.push(err.message) });
         </script>
       </body>
     </html>
@@ -35,7 +38,8 @@ router.get('/', async (ctx) => {
 
 router.use(ajaxRoutes.routes(), ajaxRoutes.allowedMethods());
 router.use(formsRoutes.routes(), formsRoutes.allowedMethods());
-router.use(requestCoordinationRoutes.routes(), requestCoordinationRoutes.allowedMethods());
 router.use(linksRoutes.routes(), linksRoutes.allowedMethods());
+router.use(navigationRoutes.routes(), navigationRoutes.allowedMethods());
+router.use(requestCoordinationRoutes.routes(), requestCoordinationRoutes.allowedMethods());
 
 module.exports = router;

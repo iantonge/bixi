@@ -9,6 +9,6 @@ test.describe('bixi ajax requests', () => {
     await page.click('#missing-pane-response-link');
     await page.waitForTimeout(100); // allow async error to propagate
     const errors = await page.evaluate(() => window.bixiErrors);
-    expect(errors).toContain('Bixi error: No pane named main found in server response');
+    expect(errors).toContain('Bixi error: No bx-nav-pane named main found in server response');
   });
 });

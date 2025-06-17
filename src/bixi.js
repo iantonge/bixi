@@ -3,6 +3,8 @@ const recentClicks = new Set()
 const parser = new DOMParser()
 const inFlightRequests = new Map()
 
+let historyStateReplaced = false
+
 let onError = (error) => { throw error }
 
 const withTryAsync = async (func) => {
@@ -118,26 +120,29 @@ const handleClick = async (e) => {
 }
 
 const getTarget = (targetName) => {
-  const el = document.querySelector(`[bx-pane="${targetName}"]`)
+  const el = document.querySelector(`[bx-pane="${targetName}"],[bx-nav-pane="${targetName}"]`)
   if (!el) throw new Error(`Bixi error: No pane named ${targetName} found in current document`)
-  return { el, name: targetName }
+  const type = el.hasAttribute('bx-pane') ? 'bx-pane' : 'bx-nav-pane'
+  return { el, name: targetName, type }
 }
 
 export const fetchAndSwapContent = async (url, method, target, body) => {
   const doRequest = async (signal) => {
-    const content = await getContent(url, method, target, body, signal)
+    const { content, finalUrl } = await getContent(url, method, target, signal, body)
     await loadContent(target, content)
+    if(target.type === 'bx-nav-pane') updateHistory(finalUrl, target.name)
+
   }
   await withRequestCoordination(target, doRequest)
 }
 
-const getContent = async (url, method, target, body, signal) => {
+const getContent = async (url, method, target, signal, body) => {
   const response = await fetch(url, { method, body, signal })
   const responseHTML = await response.text()
   const parsedDocument = parser.parseFromString(responseHTML, 'text/html')
-  const pane = parsedDocument.querySelector(`[bx-pane="${target.name}"]`)
-  if (!pane) throw new Error(`Bixi error: No pane named ${target.name} found in server response`)
-  return pane
+  const content = parsedDocument.querySelector(`[${target.type}="${target.name}"]`)
+  if (!content) throw new Error(`Bixi error: No ${target.type} named ${target.name} found in server response`)
+  return { content, finalUrl: response.url }
 }
 
 const loadContent = async (target, newContent) => {
@@ -149,19 +154,48 @@ const loadContent = async (target, newContent) => {
   }
 }
 
+const updateHistory = (url, paneName) => {
+  if (!historyStateReplaced) {
+    history.replaceState({ paneName, url: window.location.href }, '', window.location.href)
+    historyStateReplaced = true
+  }
+  history.pushState({ paneName, url }, '', url)
+}
+
 const swapContent = (target, newContent) => {
   const importedNode = document.importNode(newContent, true)
   target.el.replaceWith(importedNode)
   return importedNode
 }
 
+const tryHandlePopState = (e) => withTryAsync(() => handlePopState(e))
+
+const handlePopState = async (event) => {
+  if (!event.state) return
+
+  // Cancel all in-flight requests, regardless of target
+  inFlightRequests.forEach(controller => controller.abort())
+  inFlightRequests.clear()
+
+  const { paneName, url } = event.state
+  const target = getTarget(paneName)
+  if (target) {
+    await withInFlightRequest(target, async (signal) => {
+      const { content } = await getContent(url, 'GET', target, signal)
+      await loadContent(target, content)
+    })
+  }
+}
+
 export function init(config) {
   onError = config?.onError ?? onError
   document.addEventListener('click', tryHandleClick)
   document.addEventListener('submit', tryInterceptSubmit)
+  window.addEventListener('popstate', tryHandlePopState)
 }
 
 export function destroy() {
   document.removeEventListener('click', tryHandleClick)
   document.removeEventListener('submit', tryInterceptSubmit)
+  window.removeEventListener('popstate', tryHandlePopState)
 }

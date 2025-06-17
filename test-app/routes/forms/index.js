@@ -11,7 +11,7 @@ router.get('/', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Forms tests</h1>
           <p>Original page content</p>
           <form id="get-form" method="get" action="/forms/get-form" bx-target="main">
@@ -50,7 +50,7 @@ router.get('/get-form', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Forms tests</h1>
           <p>GET form submitted: ${someField}${additional ? ' - ' + additional : ''}</p>
           <div bx-pane="child">
@@ -59,7 +59,8 @@ router.get('/get-form', async (ctx) => {
         </div>
         <script type="module">
           import { init } from '/bixi.js';
-          init();
+          window.bixiErrors = [];
+          init({ onError: (err) => window.bixiErrors.push(err.message) });
         </script>
       </body>
     </html>
@@ -76,13 +77,14 @@ router.get('/another-get-form', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Forms tests</h1>
           <p>Another GET form submitted: ${someField}</p>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
-          init();
+          window.bixiErrors = [];
+          init({ onError: (err) => window.bixiErrors.push(err.message) });
         </script>
       </body>
     </html>
@@ -99,13 +101,14 @@ router.post('/post-form', async (ctx) => {
         <title>bixi test app</title>
       </head>
       <body>
-        <div bx-pane="main">
+        <div bx-nav-pane="main">
           <h1>Forms tests</h1>
           <p>POST form submitted: ${someField}${additional ? ' - ' + additional : ''}</p>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
-          init();
+          window.bixiErrors = [];
+          init({ onError: (err) => window.bixiErrors.push(err.message) });
         </script>
       </body>
     </html>

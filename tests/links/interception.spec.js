@@ -40,9 +40,9 @@ test.describe('bixi link interception', () => {
       ]);
 
       await newPage.waitForLoadState();
-      const newPageContent = await newPage.textContent('[bx-pane=main]');
+      const newPageContent = await newPage.textContent('[bx-nav-pane=main]');
       expect(newPageContent).toContain('This is an internal page');
-      const content = await page.textContent('[bx-pane=main]');
+      const content = await page.textContent('[bx-nav-pane=main]');
       expect(content).toContain('Original page content');
       
     }); 
@@ -53,7 +53,7 @@ test.describe('bixi link interception', () => {
       page.waitForSelector('p:has-text("This is an internal page")'),
       page.click('#internal-link')
     ]);
-    const content = await page.textContent('[bx-pane=main]');
+    const content = await page.textContent('[bx-nav-pane=main]');
     expect(content).toContain('This is an internal page');
   });
 
@@ -62,7 +62,7 @@ test.describe('bixi link interception', () => {
       page.waitForSelector('p:has-text("This is an internal page")'),
       page.click('#internal-link-span')
     ]);
-    const content = await page.textContent('[bx-pane=main]');
+    const content = await page.textContent('[bx-nav-pane=main]');
     expect(content).toContain('This is an internal page');
   });
 
