@@ -1,3 +1,5 @@
+const NAV_DEBOUNCE_TIME = 200
+const recentClicks = new Set()
 const parser = new DOMParser()
 
 let onError = (error) => { throw error }
@@ -73,6 +75,10 @@ const handleClick = async (e) => {
   const link = e.target.closest('a[bx-target]')
   if (!link) return
   e.preventDefault()
+  const hasRecentClick = recentClicks.has(link)
+  if (hasRecentClick) return
+  recentClicks.add(link)
+  setTimeout(() => recentClicks.delete(link), NAV_DEBOUNCE_TIME)
   if (new URL(link.href).origin !== window.location.origin) throw new Error('Bixi error: Cannot progressively enhance external links')
   if (link.hasAttribute('target')) throw new Error('Bixi error: Cannot progressively enhance links with target attribute')
   const target = getTarget(link.getAttribute('bx-target'))
