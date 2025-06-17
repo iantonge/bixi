@@ -1,6 +1,7 @@
 const NAV_DEBOUNCE_TIME = 200
 const recentClicks = new Set()
 const parser = new DOMParser()
+const inFlightRequests = new Map()
 
 let onError = (error) => { throw error }
 
@@ -68,6 +69,37 @@ const enableElement = (el) => {
   }
 }
 
+const withRequestCoordination = async (target, doRequest) => {
+  const toAbort = []
+  for (const [otherTarget] of inFlightRequests.entries()) {
+    if (target.el === otherTarget || target.el.contains(otherTarget)) {
+      toAbort.push(otherTarget)
+    } else if (otherTarget.contains(target.el)) {
+      return // Parent request is in flight, skip this one
+    }
+  }
+  toAbort.forEach(t => {
+    const controller = inFlightRequests.get(t)
+    controller?.abort()
+  })
+  await withInFlightRequest(target, doRequest)
+}
+
+const withInFlightRequest = async (target, doRequest) => {
+  const controller = new AbortController()
+  inFlightRequests.set(target.el, controller)
+
+  try {
+    await doRequest(controller.signal)
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      throw error
+    }
+  } finally {
+    inFlightRequests.delete(target.el)
+  }
+}
+
 const tryHandleClick = (e) => withTryAsync(() => handleClick(e))
 
 const handleClick = async (e) => {
@@ -92,12 +124,15 @@ const getTarget = (targetName) => {
 }
 
 export const fetchAndSwapContent = async (url, method, target, body) => {
-  const content = await getContent(url, method, target, body)
-  await loadContent(target, content)
+  const doRequest = async (signal) => {
+    const content = await getContent(url, method, target, body, signal)
+    await loadContent(target, content)
+  }
+  await withRequestCoordination(target, doRequest)
 }
 
-const getContent = async (url, method, target, body) => {
-  const response = await fetch(url, { method, body })
+const getContent = async (url, method, target, body, signal) => {
+  const response = await fetch(url, { method, body, signal })
   const responseHTML = await response.text()
   const parsedDocument = parser.parseFromString(responseHTML, 'text/html')
   const pane = parsedDocument.querySelector(`[bx-pane="${target.name}"]`)
