@@ -3,6 +3,7 @@ const ajaxRoutes = require('./ajax');
 const formsRoutes = require('./forms');
 const linksRoutes = require('./links');
 const navigationRoutes = require('./navigation');
+const paneRoutes = require('./panes');
 const requestCoordinationRoutes = require('./request-coordination');
 
 const router = new Router();
@@ -23,6 +24,7 @@ router.get('/', async (ctx) => {
             <li><a href="/forms" bx-target="main">form tests</a></li>
             <li><a href="/links" bx-target="main">link tests</a></li>
             <li><a href="/navigation" bx-target="main">navigation tests</a></li>
+            <li><a href="/panes" bx-target="main">pane tests</a></li>
             <li><a href="/request-coordination" bx-target="main">request coordination tests</a></li>
           </ul>
         </div>
@@ -40,6 +42,7 @@ router.use(ajaxRoutes.routes(), ajaxRoutes.allowedMethods());
 router.use(formsRoutes.routes(), formsRoutes.allowedMethods());
 router.use(linksRoutes.routes(), linksRoutes.allowedMethods());
 router.use(navigationRoutes.routes(), navigationRoutes.allowedMethods());
+router.use(paneRoutes.routes(), paneRoutes.allowedMethods());
 router.use(requestCoordinationRoutes.routes(), requestCoordinationRoutes.allowedMethods());
 
 module.exports = router;
