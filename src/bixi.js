@@ -23,7 +23,7 @@ const interceptSubmit = async (e) => {
   const { url, body } = (method === 'GET')
     ? buildGetRequest(action, formData)
     : { url: action, body: formData }
-  await fetchAndSwapContent(url, method, target, body)
+  await withDisabledForm(e.target, () => fetchAndSwapContent(url, method, target, body))
 }
 
 const buildGetRequest = (action, formData) => {
@@ -31,6 +31,39 @@ const buildGetRequest = (action, formData) => {
   const params = new URLSearchParams(formData)
   if (params.size) url.search = '?' + params.toString()
   return { url: url.href }
+}
+
+const withDisabledForm = async (form, func) => {
+  updateInteractiveElements(form, disableElement)
+  if (form.id) document.querySelectorAll(`[form="${form.id}"]`).forEach(disableElement)
+
+  try {
+    await func()
+  } finally {
+    updateInteractiveElements(form, enableElement)
+    if (form.id) document.querySelectorAll(`[form="${form.id}"]`).forEach(enableElement)
+  }
+}
+
+const updateInteractiveElements = (container, func) => {
+  container.querySelectorAll('input, button, select, textarea')
+    .forEach(func)
+}
+
+const disableElement = (el) => {
+  if (!el.disabled) {
+    el.disabled = true
+    el.setAttribute('data-bixi-disabled', 'true')
+    el.setAttribute('aria-disabled', 'true')
+  }
+}
+
+const enableElement = (el) => {
+  if (el.dataset.bixiDisabled) {
+    el.disabled = false
+    el.removeAttribute('data-bixi-disabled')
+    el.removeAttribute('aria-disabled')
+  }
 }
 
 const tryHandleClick = (e) => withTryAsync(() => handleClick(e))
