@@ -1,6 +1,7 @@
 const Router = require('@koa/router');
 const ajaxRoutes = require('./ajax');
 const formsRoutes = require('./forms');
+const requestCoordinationRoutes = require('./request-coordination');
 const linksRoutes = require('./links');
 
 const router = new Router();
@@ -19,6 +20,7 @@ router.get('/', async (ctx) => {
           <ul>
             <li><a href="/ajax" bx-target="main">ajax tests</a></li>
             <li><a href="/forms" bx-target="main">form tests</a></li>
+            <li><a href="/request-coordination" bx-target="main">request coordination tests</a></li>
             <li><a href="/links" bx-target="main">link tests</a></li>
           </ul>
         </div>
@@ -33,6 +35,7 @@ router.get('/', async (ctx) => {
 
 router.use(ajaxRoutes.routes(), ajaxRoutes.allowedMethods());
 router.use(formsRoutes.routes(), formsRoutes.allowedMethods());
+router.use(requestCoordinationRoutes.routes(), requestCoordinationRoutes.allowedMethods());
 router.use(linksRoutes.routes(), linksRoutes.allowedMethods());
 
 module.exports = router;
