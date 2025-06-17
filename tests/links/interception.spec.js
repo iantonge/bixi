@@ -65,4 +65,23 @@ test.describe('bixi link interception', () => {
     const content = await page.textContent('[bx-pane=main]');
     expect(content).toContain('This is an internal page');
   });
+
+  test('ignores extra clicks within debounce window', async ({ page }) => {
+    let requestCount = 0;
+    await page.route('**/links/interception/internal-link', async route => {
+      requestCount++;
+      await new Promise(r => setTimeout(r, 100));
+      await route.continue();
+    });
+
+    await page.evaluate(() => {
+      const link = document.querySelector('#internal-link');
+      link.click();
+      link.click();
+      link.click();
+    });
+
+    await page.waitForSelector('p:has-text("This is an internal page")');
+    expect(requestCount).toBe(1);
+  });
 });
