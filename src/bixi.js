@@ -6,6 +6,7 @@ const inFlightRequests = new Map()
 let historyStateReplaced = false
 
 let onError = (error) => { throw error }
+let busyClass = 'bx-busy'
 
 const withTryAsync = async (func) => {
   try {
@@ -128,14 +129,29 @@ const getTarget = (targetName) => {
   return { el, name: targetName, type }
 }
 
-export const fetchAndSwapContent = async (url, method, target, body) => {
+export const fetchAndSwapContent = async (url, method, target, body, enableUIFeedback = true) => {
   const doRequest = async (signal) => {
     const { content, finalUrl } = await getContent(url, method, target, signal, body)
     await loadContent(target, content)
     if(target.type === 'bx-nav-pane') updateHistory(finalUrl, target.name)
 
   }
-  await withRequestCoordination(target, doRequest)
+  enableUIFeedback
+    ? await withUiFeedback(target.el, () => withRequestCoordination(target, doRequest))
+    : await withRequestCoordination(target, doRequest)
+}
+
+const withUiFeedback = async (el, doRequest) => {
+  updateInteractiveElements(el, disableElement)
+  el.classList.add(busyClass)
+  el.setAttribute('aria-busy', 'true')
+  try {
+    await doRequest()
+  } finally {
+    el.removeAttribute('aria-busy')
+    el.classList.remove(busyClass)
+    updateInteractiveElements(el, enableElement)
+  }
 }
 
 const getContent = async (url, method, target, signal, body) => {
@@ -197,6 +213,7 @@ const handlePopState = async (event) => {
 
 export function init(config) {
   onError = config?.onError ?? onError
+  busyClass = config?.busyClass ?? busyClass
   document.addEventListener('click', tryHandleClick)
   document.addEventListener('submit', tryInterceptSubmit)
   window.addEventListener('popstate', tryHandlePopState)
