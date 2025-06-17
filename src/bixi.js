@@ -120,8 +120,10 @@ const handleClick = async (e) => {
 }
 
 const getTarget = (targetName) => {
-  const el = document.querySelector(`[bx-pane="${targetName}"],[bx-nav-pane="${targetName}"]`)
-  if (!el) throw new Error(`Bixi error: No pane named ${targetName} found in current document`)
+  const candidates = document.querySelectorAll(`[bx-pane="${targetName}"],[bx-nav-pane="${targetName}"]`)
+  if (candidates.length === 0) throw new Error(`Bixi error: No pane named ${targetName} found in current document`)
+  if (candidates.length > 1) throw new Error(`Bixi error: Multiple panes named ${targetName} found in current document`)
+  const el = candidates[0]
   const type = el.hasAttribute('bx-pane') ? 'bx-pane' : 'bx-nav-pane'
   return { el, name: targetName, type }
 }
@@ -140,9 +142,10 @@ const getContent = async (url, method, target, signal, body) => {
   const response = await fetch(url, { method, body, signal })
   const responseHTML = await response.text()
   const parsedDocument = parser.parseFromString(responseHTML, 'text/html')
-  const content = parsedDocument.querySelector(`[${target.type}="${target.name}"]`)
-  if (!content) throw new Error(`Bixi error: No ${target.type} named ${target.name} found in server response`)
-  return { content, finalUrl: response.url }
+  const candidates = parsedDocument.querySelectorAll(`[${target.type}="${target.name}"]`)
+  if (candidates.length === 0) throw new Error(`Bixi error: No ${target.type} named ${target.name} found in server response`)
+  if (candidates.length > 1) throw new Error(`Bixi error: Multiple ${target.type}s named ${target.name} found in server response`)
+  return { content: candidates[0], finalUrl: response.url }
 }
 
 const loadContent = async (target, newContent) => {
