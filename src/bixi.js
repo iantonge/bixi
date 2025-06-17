@@ -165,17 +165,28 @@ const getContent = async (url, method, target, signal, body) => {
 }
 
 const loadContent = async (target, newContent) => {
+  const beforeEvent = new CustomEvent('bixi:beforeLoadContent', {
+    detail: {
+      newContent
+    },
+    cancelable: true,
+    bubbles: true
+  })
+  target.el.dispatchEvent(beforeEvent)
+  if (beforeEvent.defaultPrevented) return
   let loadedContent
   if (document.startViewTransition) {
-    await document.startViewTransition(() => loadedContent = swapContent(target, newContent)).finished
+    await document.startViewTransition(() => loadedContent = swapContent(target, beforeEvent.detail.newContent)).finished
   } else {
-    loadedContent = swapContent(target, newContent)
+    loadedContent = swapContent(target, beforeEvent.detail.newContent)
   }
   const autoFocusEl = loadedContent.querySelector('[autofocus]')
   if (autoFocusEl) {
     autoFocusEl.focus()
     autoFocusEl.removeAttribute('autofocus')
   }
+  const afterEvent = new CustomEvent('bixi:afterLoadContent', { bubbles: true })
+  loadedContent.dispatchEvent(afterEvent)
 }
 
 const updateHistory = (url, paneName) => {
