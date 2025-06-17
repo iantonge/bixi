@@ -21,10 +21,14 @@ router.get('/', async (ctx) => {
             <button type="submit" formmethod="post" formaction="/forms/post-form">Formmethod submit</button>
             <button type="submit" name="additional-value" value="some value">Additional value submit</button>
           </form>
+          <button id="external-get" type="submit" form="get-form" bx-target="child">External GET submit</button>
           <form id="post-form" method="post" action="/forms/post-form" bx-target="main">
             <input type="text" name="some-field" value="some field value" />
             <button type="submit">Plain submit</button>
           </form>
+          <div bx-pane="child">
+            <p>Original child content.</p>
+          </div>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
@@ -49,6 +53,9 @@ router.get('/get-form', async (ctx) => {
         <div bx-pane="main">
           <h1>Forms tests</h1>
           <p>GET form submitted: ${someField}${additional ? ' - ' + additional : ''}</p>
+          <div bx-pane="child">
+            <p>Updated child content.</p>
+          </div>
         </div>
         <script type="module">
           import { init } from '/bixi.js';
