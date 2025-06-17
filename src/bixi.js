@@ -155,6 +155,11 @@ const loadContent = async (target, newContent) => {
   } else {
     loadedContent = swapContent(target, newContent)
   }
+  const autoFocusEl = loadedContent.querySelector('[autofocus]')
+  if (autoFocusEl) {
+    autoFocusEl.focus()
+    autoFocusEl.removeAttribute('autofocus')
+  }
 }
 
 const updateHistory = (url, paneName) => {
