@@ -7,6 +7,14 @@ let historyStateReplaced = false
 
 let onError = (error) => { throw error }
 let busyClass = 'bx-busy'
+let headContentSelectors = [
+  'title',
+  'meta[name]',
+  'meta[property]',
+  'link[rel="canonical"]',
+  'link[rel="alternate"]',
+  'script[type="application/ld+json"]'
+]
 
 const withTryAsync = async (func) => {
   try {
@@ -131,10 +139,12 @@ const getTarget = (targetName) => {
 
 export const fetchAndSwapContent = async (url, method, target, body, enableUIFeedback = true) => {
   const doRequest = async (signal) => {
-    const { content, finalUrl } = await getContent(url, method, target, signal, body)
+    const { content, finalUrl, newHead } = await getContent(url, method, target, signal, body)
     await loadContent(target, content)
-    if(target.type === 'bx-nav-pane') updateHistory(finalUrl, target.name)
-
+    if(target.type === 'bx-nav-pane') {
+      updateHead(newHead)
+      updateHistory(finalUrl, target.name)
+    }
   }
   enableUIFeedback
     ? await withUiFeedback(target.el, () => withRequestCoordination(target, doRequest))
@@ -161,14 +171,12 @@ const getContent = async (url, method, target, signal, body) => {
   const candidates = parsedDocument.querySelectorAll(`[${target.type}="${target.name}"]`)
   if (candidates.length === 0) throw new Error(`Bixi error: No ${target.type} named ${target.name} found in server response`)
   if (candidates.length > 1) throw new Error(`Bixi error: Multiple ${target.type}s named ${target.name} found in server response`)
-  return { content: candidates[0], finalUrl: response.url }
+  return { content: candidates[0], finalUrl: response.url, newHead: parsedDocument.head }
 }
 
 const loadContent = async (target, newContent) => {
   const beforeEvent = new CustomEvent('bixi:beforeLoadContent', {
-    detail: {
-      newContent
-    },
+    detail: { newContent },
     cancelable: true,
     bubbles: true
   })
@@ -197,6 +205,17 @@ const updateHistory = (url, paneName) => {
   history.pushState({ paneName, url }, '', url)
 }
 
+const updateHead = (newHead) => {
+  if(newHead) {
+    headContentSelectors.forEach(selector => {
+      document.head.querySelectorAll(selector).forEach(el => el.remove())
+      newHead.querySelectorAll(selector).forEach(tag => {
+        document.head.appendChild(tag.cloneNode(true))
+      })
+    })
+  }
+}
+
 const swapContent = (target, newContent) => {
   const importedNode = document.importNode(newContent, true)
   target.el.replaceWith(importedNode)
@@ -216,8 +235,9 @@ const handlePopState = async (event) => {
   const target = getTarget(paneName)
   if (target) {
     await withInFlightRequest(target, async (signal) => {
-      const { content } = await getContent(url, 'GET', target, signal)
+      const { content, newHead } = await getContent(url, 'GET', target, signal)
       await loadContent(target, content)
+      updateHead(newHead)
     })
   }
 }
@@ -225,6 +245,7 @@ const handlePopState = async (event) => {
 export function init(config) {
   onError = config?.onError ?? onError
   busyClass = config?.busyClass ?? busyClass
+  headContentSelectors = config?.headContentSelectors ?? headContentSelectors
   document.addEventListener('click', tryHandleClick)
   document.addEventListener('submit', tryInterceptSubmit)
   window.addEventListener('popstate', tryHandlePopState)
