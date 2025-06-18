@@ -1,6 +1,7 @@
 const Router = require('@koa/router');
 const ajaxRoutes = require('./ajax');
 const autofocusRoutes = require('./autofocus');
+const eventsRoutes = require('./events');
 const formsRoutes = require('./forms');
 const linksRoutes = require('./links');
 const navigationRoutes = require('./navigation');
@@ -23,6 +24,7 @@ router.get('/', async (ctx) => {
           <ul>
             <li><a href="/ajax" bx-target="main">ajax tests</a></li>
             <li><a href="/autofocus" bx-target="main">autofocus tests</a></li>
+            <li><a href="/events" bx-target="main">event tests</a></li>
             <li><a href="/forms" bx-target="main">form tests</a></li>
             <li><a href="/links" bx-target="main">link tests</a></li>
             <li><a href="/navigation" bx-target="main">navigation tests</a></li>
@@ -42,6 +44,7 @@ router.get('/', async (ctx) => {
 
 router.use(ajaxRoutes.routes(), ajaxRoutes.allowedMethods());
 router.use(autofocusRoutes.routes(), autofocusRoutes.allowedMethods());
+router.use(eventsRoutes.routes(), eventsRoutes.allowedMethods());
 router.use(formsRoutes.routes(), formsRoutes.allowedMethods());
 router.use(linksRoutes.routes(), linksRoutes.allowedMethods());
 router.use(navigationRoutes.routes(), navigationRoutes.allowedMethods());
