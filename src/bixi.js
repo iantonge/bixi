@@ -137,8 +137,14 @@ const getTarget = (targetName) => {
   return { el, name: targetName, type }
 }
 
-export const fetchAndSwapContent = async (url, method, target, body, enableUIFeedback = true) => {
-  const doRequest = async (signal) => {
+export const backgroundFetchAndSwapContent = async (url, method, target, body) => 
+  await withRequestCoordination(target, getRequestFunc(url, method, target, body))
+
+export const fetchAndSwapContent = async (url, method, target, body) =>
+  await withUiFeedback(target.el, () => withRequestCoordination(target, getRequestFunc(url, method, target, body)))
+
+const getRequestFunc = (url, method, target, body) => {
+  return async (signal) => {
     const { content, finalUrl, newHead } = await getContent(url, method, target, signal, body)
     await loadContent(target, content)
     if(target.type === 'bx-nav-pane') {
@@ -146,9 +152,6 @@ export const fetchAndSwapContent = async (url, method, target, body, enableUIFee
       updateHistory(finalUrl, target.name)
     }
   }
-  enableUIFeedback
-    ? await withUiFeedback(target.el, () => withRequestCoordination(target, doRequest))
-    : await withRequestCoordination(target, doRequest)
 }
 
 const withUiFeedback = async (el, doRequest) => {
