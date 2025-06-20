@@ -81,18 +81,14 @@ const enableElement = (el) => {
 }
 
 const withRequestCoordination = async (target, doRequest) => {
-  const toAbort = []
-  for (const [otherTarget] of inFlightRequests.entries()) {
+  for (const [otherTarget, controller] of inFlightRequests.entries()) {
+    if (controller.signal.aborted) continue
     if (target.el === otherTarget || target.el.contains(otherTarget)) {
-      toAbort.push(otherTarget)
+      controller.abort()
     } else if (otherTarget.contains(target.el)) {
       return // Parent request is in flight, skip this one
     }
   }
-  toAbort.forEach(t => {
-    const controller = inFlightRequests.get(t)
-    controller?.abort()
-  })
   await withInFlightRequest(target, doRequest)
 }
 
