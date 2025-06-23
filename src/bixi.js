@@ -16,7 +16,7 @@ let headContentSelectors = [
   'script[type="application/ld+json"]'
 ]
 
-const withTryAsync = async (func) => {
+const withErrorHandling = async (func) => {
   try {
     await func()
   } catch (error) {
@@ -24,7 +24,7 @@ const withTryAsync = async (func) => {
   }
 }
 
-const tryInterceptSubmit = (e) => withTryAsync(() => interceptSubmit(e))
+const tryInterceptSubmit = (e) => withErrorHandling(() => interceptSubmit(e))
 
 const interceptSubmit = async (e) => {
   const targetName = e.submitter?.getAttribute('bx-target') || e.target.getAttribute('bx-target')
@@ -107,7 +107,7 @@ const withInFlightRequest = async (target, doRequest) => {
   }
 }
 
-const tryHandleClick = (e) => withTryAsync(() => handleClick(e))
+const tryHandleClick = (e) => withErrorHandling(() => handleClick(e))
 
 const handleClick = async (e) => {
   if (e.button === 1 || e.ctrlKey || e.metaKey || e.shiftKey) return // Modifiers to open a link in a new tab
@@ -221,7 +221,7 @@ const swapContent = (target, newContent) => {
   return importedNode
 }
 
-const tryHandlePopState = (e) => withTryAsync(() => handlePopState(e))
+const tryHandlePopState = (e) => withErrorHandling(() => handlePopState(e))
 
 const handlePopState = async (event) => {
   if (!event.state) return
