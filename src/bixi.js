@@ -204,17 +204,26 @@ const endUiFeedback = (el, requestId) => {
 
 const fetchContent = async (request, target) => {
   request.headers.append('X-Bixi-Target', target.name)
-  const response = await fetch(request)
-  const targetOverride = response.headers.get('X-Bixi-Target-Override');
+  const beforeEvent = new CustomEvent('bixi:beforeFetch', {
+    detail: { request },
+    cancelable: true,
+    bubbles: true
+  })
+  target.el.dispatchEvent(beforeEvent)
+  if (beforeEvent.defaultPrevented) return
+  const response = await fetch(beforeEvent.detail.request)
+  const afterEvent = new CustomEvent('bixi:afterFetch', { bubbles: true, detail: { response } })
+  target.el.dispatchEvent(afterEvent)
+  const targetOverride = afterEvent.detail.response.headers.get('X-Bixi-Target-Override');
   const finalTarget = targetOverride
     ? getTarget(targetOverride)
     : target
-  const responseHTML = await response.text()
+  const responseHTML = await afterEvent.detail.response.text()
   const parsedDocument = parser.parseFromString(responseHTML, 'text/html')
   const candidates = parsedDocument.querySelectorAll(`[${finalTarget.type}="${finalTarget.name}"]`)
   if (candidates.length === 0) throw new Error(`Bixi error: No ${finalTarget.type} named ${finalTarget.name} found in server response`)
   if (candidates.length > 1) throw new Error(`Bixi error: Multiple ${finalTarget.type}s named ${finalTarget.name} found in server response`)
-  return { content: candidates[0], finalUrl: response.url, newHead: parsedDocument.head, finalTarget }
+  return { content: candidates[0], finalUrl: afterEvent.detail.response.url, newHead: parsedDocument.head, finalTarget }
 }
 
 const getTarget = (targetName) => {
@@ -236,9 +245,9 @@ const loadContent = async (el, newContent) => {
   if (beforeEvent.defaultPrevented) return
   let loadedContent
   if (document.startViewTransition) {
-    await document.startViewTransition(() => loadedContent = swapContent(el, newContent)).finished
+    await document.startViewTransition(() => loadedContent = swapContent(el, beforeEvent.detail.newContent)).finished
   } else {
-    loadedContent = swapContent(el, newContent)
+    loadedContent = swapContent(el, beforeEvent.detail.newContent)
   }
   const autoFocusEl = loadedContent.querySelector('[autofocus]')
   if (autoFocusEl) {
