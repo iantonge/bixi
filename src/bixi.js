@@ -203,6 +203,7 @@ const endUiFeedback = (el, requestId) => {
 }
 
 const fetchContent = async (request, target) => {
+  request.headers.append('X-Bixi-Target', target.name)
   const response = await fetch(request)
   const responseHTML = await response.text()
   const parsedDocument = parser.parseFromString(responseHTML, 'text/html')
