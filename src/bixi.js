@@ -30,10 +30,10 @@ const submitPipeline = async (e) => {
       startUiFeedback(ctx.target.el, requestId)
       inFlightRequests.set(ctx.target.el, ctx.abortController)
       const response = await fetchContent(ctx.request, ctx.target)
-      const loadedContent = await loadContent(ctx.target.el, response.content)
-      if(loadedContent && ctx.target.type === 'bx-nav-pane') {
+      const loadedContent = await loadContent(response.finalTarget.el, response.content)
+      if(loadedContent && response.finalTarget.type === 'bx-nav-pane') {
         updateHead(response.newHead)
-        updateHistory(response.finalUrl, ctx.target.name)
+        updateHistory(response.finalUrl, response.finalTarget.name)
       }
     } catch (error) {
       if (error.name !== 'AbortError') {
@@ -205,12 +205,16 @@ const endUiFeedback = (el, requestId) => {
 const fetchContent = async (request, target) => {
   request.headers.append('X-Bixi-Target', target.name)
   const response = await fetch(request)
+  const targetOverride = response.headers.get('X-Bixi-Target-Override');
+  const finalTarget = targetOverride
+    ? getTarget(targetOverride)
+    : target
   const responseHTML = await response.text()
   const parsedDocument = parser.parseFromString(responseHTML, 'text/html')
-  const candidates = parsedDocument.querySelectorAll(`[${target.type}="${target.name}"]`)
-  if (candidates.length === 0) throw new Error(`Bixi error: No ${target.type} named ${target.name} found in server response`)
-  if (candidates.length > 1) throw new Error(`Bixi error: Multiple ${target.type}s named ${target.name} found in server response`)
-  return { content: candidates[0], finalUrl: response.url, newHead: parsedDocument.head }
+  const candidates = parsedDocument.querySelectorAll(`[${finalTarget.type}="${finalTarget.name}"]`)
+  if (candidates.length === 0) throw new Error(`Bixi error: No ${finalTarget.type} named ${finalTarget.name} found in server response`)
+  if (candidates.length > 1) throw new Error(`Bixi error: Multiple ${finalTarget.type}s named ${finalTarget.name} found in server response`)
+  return { content: candidates[0], finalUrl: response.url, newHead: parsedDocument.head, finalTarget }
 }
 
 const getTarget = (targetName) => {
